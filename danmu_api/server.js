@@ -279,7 +279,7 @@ function needsAsyncStartup() {
   }
 }
 
-// --- 核心 HTTP 服务器逻辑 ---
+// --- 核心 HTTP 服务器（端口 9321）逻辑 ---
 // 创建主业务服务器实例（将 Node.js 请求转换为 Web API Request，并调用 worker.js 处理）
 function createServer() {
   // 导入所需的 fetch 兼容对象
@@ -352,7 +352,7 @@ function createServer() {
   });
 }
 
-// 代理服务器逻辑
+// 代理服务器逻辑（用于5321端口）
 function createProxyServer() {
   return http.createServer((req, res) => {
     const queryObject = url.parse(req.url, true).query;
@@ -491,24 +491,19 @@ function createProxyServer() {
 function startServerSync() {
   console.log('[server] Starting server synchronously (optimal path)');
 
-  // 从环境变量获取端口，优先使用 PORT（Zeabur 会自动注入），默认 8080
-  const mainPort = process.env.PORT || 8080;
-  // 代理服务端口，可通过 PROXY_PORT 环境变量配置，默认 5321
-  const proxyPort = process.env.PROXY_PORT || 5321;
-
   // 设置 .env 文件监听
   setupEnvWatcher();
 
-  // 启动主业务服务器
+  // 启动主业务服务器 (9321)
   mainServer = createServer();
-  mainServer.listen(mainPort, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${mainPort}`);
+  mainServer.listen(9321, '0.0.0.0', () => {
+    console.log('Server running on http://0.0.0.0:9321');
   });
 
-  // 启动代理服务
+  // 启动5321端口的代理服务
   proxyServer = createProxyServer();
-  proxyServer.listen(proxyPort, '0.0.0.0', () => {
-    console.log(`Proxy server running on http://0.0.0.0:${proxyPort}`);
+  proxyServer.listen(5321, '0.0.0.0', () => {
+    console.log('Proxy server running on http://0.0.0.0:5321');
   });
 }
 
@@ -516,11 +511,6 @@ function startServerSync() {
 async function startServerAsync() {
   try {
     console.log('[server] Starting server asynchronously (compatibility mode for Node.js <20.19.0 + node-fetch v3)');
-
-    // 从环境变量获取端口，优先使用 PORT（Zeabur 会自动注入），默认 8080
-    const mainPort = process.env.PORT || 8080;
-    // 代理服务端口，可通过 PROXY_PORT 环境变量配置，默认 5321
-    const proxyPort = process.env.PROXY_PORT || 5321;
 
     // 设置 .env 文件监听
     setupEnvWatcher();
@@ -532,16 +522,16 @@ async function startServerAsync() {
       console.log('[server] node-fetch v3 loaded successfully');
     }
 
-    // 启动主业务服务器
+    // 启动主业务服务器 (9321)
     mainServer = createServer();
-    mainServer.listen(mainPort, '0.0.0.0', () => {
-      console.log(`Server running on http://0.0.0.0:${mainPort} (compatibility mode)`);
+    mainServer.listen(9321, '0.0.0.0', () => {
+      console.log('Server running on http://0.0.0.0:9321 (compatibility mode)');
     });
 
-    // 启动代理服务
+    // 启动5321端口的代理服务
     proxyServer = createProxyServer();
-    proxyServer.listen(proxyPort, '0.0.0.0', () => {
-      console.log(`Proxy server running on http://0.0.0.0:${proxyPort} (compatibility mode)`);
+    proxyServer.listen(5321, '0.0.0.0', () => {
+      console.log('Proxy server running on http://0.0.0.0:5321 (compatibility mode)');
     });
 
   } catch (error) {
